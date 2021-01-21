@@ -1,25 +1,77 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import Container from '@material-ui/core/Container'
+import { makeStyles } from '@material-ui/core/styles'
+import Typography from '@material-ui/core/Typography'
+import CircularProgress from '@material-ui/core/CircularProgress'
+import PetsIcon from '@material-ui/icons/Pets'
+import { useQuery, gql } from '@apollo/client'
 
-function App() {
+import { WelcomeScreen } from './WelcomeScreen'
+import { TinderSwipe } from './TinderSwipe'
+
+const FETCH_ALL_PUPPIES = gql`
+  query FetchAllPuppies {
+    queryPuppy {
+      id
+      name
+      age
+      matchedCount
+      profilePic
+      bio
+      interests
+    }
+  }
+`
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    textAlign: 'center',
+    color: '#FFF',
+  },
+  header: {
+    marginTop: theme.spacing(6),
+    marginBottom: theme.spacing(6),
+  },
+  headerText: {
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+  },
+}))
+
+export default function App() {
+  const classes = useStyles()
+  const [showWelcomeScreen, setShowWelcomeScreen] = React.useState(true)
+  const { data, refetch } = useQuery(FETCH_ALL_PUPPIES)
+
+  const puppyData =
+    data &&
+    [...data.queryPuppy].sort((puppyA, puppyB) =>
+      puppyA.name > puppyB.name ? -1 : 1
+    )
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <main className={classes.root}>
+      <Container>
+        <h1 className={classes.header}>
+          <PetsIcon />
+          <span className={classes.headerText}>Puppy UDEA</span>
+          <PetsIcon />
+        </h1>
+        {showWelcomeScreen ? (
+          <WelcomeScreen
+            handleGetStartedClick={() => setShowWelcomeScreen(false)}
+          />
+        ) : puppyData ? (
+          <TinderSwipe puppyData={puppyData} fetchPuppyData={refetch} />
+        ) : (
+          <div className={classes.loadingContainer}>
+            <CircularProgress color="inherit" size={60} />
+            <Typography className={classes.loadingText}>
+              Obteniendo Información de los Perritos
+            </Typography>
+          </div>
+        )}
+      </Container>
+    </main>
+  )
 }
-
-export default App;
